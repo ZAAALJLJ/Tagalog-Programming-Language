@@ -13,6 +13,12 @@ export enum TokenType {
     Let,
 }
 
+// QUESTION What is Record?
+// ANSWER it's basically a dictionary
+const KEYWORDS: Record<string, TokenType> = {
+    "let": TokenType.Let,
+}
+
 // 'export' makes the interface Token available for use in other files of modules.
 // Without export, the Token interface would only be accessible within the file where it is defined
 // With this I can put the Tokens into the 'parser'
@@ -23,7 +29,7 @@ export enum TokenType {
 // an interface can only define an object's shape and can't define a behavior (method)
 // reason for use, the token won't be needing any methods as its just a container for data
 
-export interface Token {
+export interface Token { 
     value: string;
     type: TokenType;
 }
@@ -38,9 +44,11 @@ function isalpha (src: string) {
     return src.toUpperCase() != src.toLowerCase();
 }
 
+function isskippable (str: string) {
+    return str == ' ' || str == '/n' || str == '/t'
+}
+
 function isint (str: string) {
-    // only the first character is checked since if the first character is an int then that means it already is an int
-    // only an int has a number as a first character
     const c = str.charCodeAt(0);
     const bounds = ['0'.charCodeAt(0), '9'.charCodeAt(0)];
     return (c >= bounds[0] && c <= bounds[1]);
@@ -67,11 +75,66 @@ export function tokenize(sourceCode: string): Token[] {
             tokens.push(token(src.shift(), TokenType.CloseParen));
         } else if (src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == '/' ) {
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
-        } else if (src[0] == '==') {
+        } else if (src[0] == '=') {
             tokens.push(token(src.shift(), TokenType.Equals));
         } else {
             // Handle multicharacter tokens
+
+            // Number token
+            // if src[0] is an int then that means everything should be an int since only an int can start with a number
+            // isint
+            if (isint(src[0])) {
+                let num = "";
+                // QUESTION how does this loop work because I'm confused as to when is stops?
+                // is it because of the isint(src[0])?
+                // src.shift removes the first element and returns it
+                // it stops when it has emptied src, MIND BLOWN moment
+
+                // QUESTION will there be a case where the input is 1111a?
+                while (src.length > 0 && isint(src[0])) {
+                    num += src.shift();
+                }
+
+                tokens.push(token(num, TokenType.Number));
+            } else if (isalpha(src[0])) {
+                let ident = "";
+
+                // Problem with this is that it can also accept RESERVED KEYWORDS like 'let', it should only accept USER-DEFINED identifiers
+                // SOLUTION create a dictionary to check if it is a reserved keyword
+                // QUESTION there are USER-DEFINED identifiers that contain numbers like 'foo1', will the isalpha still work?
+                // ANSWER no. isalpha will only make identifiers with letters as 'true'
+                while (src.length > 0 && (isalpha(src[0]) || isint(src[0]))) {
+                    ident += src.shift();
+                }
+
+                // check for reserved keywords
+                // NOTE let is mutable while const is immutable
+                const reserved = KEYWORDS[ident];
+                if (reserved == undefined) {
+                    tokens.push(token(ident, TokenType.Identifier));
+                } else {
+                    tokens.push(token(ident, reserved));
+                }
+            } else if (isskippable(src[0])) {
+                // QUESTION what will happen to the skipped character? Will they still be included in the next steps or what?
+                src.shift(); // SKIP THE CURRENT CHARACTER
+            } else {
+                console.log("Unrecognized character found in source: ", src[0])
+                // Gonna cancel the excecution and exit right away
+                Deno.exit(1);
+            }
         }
     }
     return tokens;
+
+}
+
+// NEW WORD await -
+// NEW WORD Deno.readTextFile - just reads or accesses the file
+const source = await Deno.readTextFile("./test.txt");
+
+// What this does is get the token from the source file that had been tokenized
+// 'tokenn' is just a variable name
+for (const tokenn of tokenize(source)) {
+    console.log(tokenn);
 }
