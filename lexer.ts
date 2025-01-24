@@ -4,13 +4,19 @@
 // All the types of token
 // QUESTION Why do I need to have a Token type? Is this the Data Type already?
 export enum TokenType {
+    // Literal Types
     Number,
     Identifier,
+
+    // Keywords
+    Let,
+
+    // Grouping * Operators
     Equals,
     OpenParen,
     CloseParen,
     BinaryOperator,
-    Let,
+    EOF, // Signified the end of the file
 }
 
 // QUESTION What is Record?
@@ -125,6 +131,9 @@ export function tokenize(sourceCode: string): Token[] {
             }
         }
     }
+
+    tokens.push({type: TokenType.EOF, value: "EndOffile"});
+    // tokens.push(token("EndOfFile", TokenType.EOF));
     return tokens;
 
 }
