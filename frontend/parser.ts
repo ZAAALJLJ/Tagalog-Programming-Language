@@ -42,6 +42,11 @@ export default class Parser {
         // 'as Token' was used in case Typescript has any issues with that
         return this.tokens[0] as Token;
     }
+
+    private eat () {
+        const prev = this.tokens.shift() as Token;
+        return prev;
+    }
     // QUESTION why is this public?
     // ANSWER the 'interpreter' will need to access this to get the AST
     public produceAST(sourceCode: string): Program {
@@ -91,11 +96,17 @@ export default class Parser {
 
         switch (tk) {
             case TokenType.Identifier:
-                return { kind: "Identifier", symbol: this.at().value } as Identifier;
+                return { kind: "Identifier", symbol: this.eat().value } as Identifier;
                 // However there is an issue here
-
+                // this doesnt advance
+            case TokenType.Number:
+                return { kind: "NumericLiteral", value: parseFloat(this.eat().value) } as NumericLiteral;
+                // However there is an issue here
+                // this doesnt advance
             default:
-                return {} as Stmt;
+                console.error("Unexpected token found during parsing!", this.at());
+                Deno.exit(1);
+            // Trick the compiler for TS
         }
     }
 }

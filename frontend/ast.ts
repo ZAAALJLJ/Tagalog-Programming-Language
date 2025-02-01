@@ -56,5 +56,5 @@ export interface Identifier extends Expr {
 
 export interface NumericLiteral extends Expr {
     kind: "NumericLiteral";
-    symbol: string;
+    value: number;
 }
