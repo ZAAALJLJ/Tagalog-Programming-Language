@@ -47,6 +47,15 @@ export default class Parser {
         const prev = this.tokens.shift() as Token;
         return prev;
     }
+
+    // QUESTION What is any
+    private expect(type: TokenType, err: any) {
+        const prev = this.tokens.shift() as Token;
+        if (!prev || prev.type != type) {
+            console.error("Parser Error:\n", err, prev, " - Expecting", type);
+            Deno.exit(1);
+        }
+    }
     // QUESTION why is this public?
     // ANSWER the 'interpreter' will need to access this to get the AST
     public produceAST(sourceCode: string): Program {
@@ -79,9 +88,55 @@ export default class Parser {
     }
 
     private parse_expr (): Expr {
-        return this.parse_primary_expr();
+        return this.parse_additive_expr();
         // What type do we wanna parase first?
 
+    }
+
+    private parse_additive_expr (): Expr {
+        // QUESTION Why call it?
+        // ANSWER Because it has more precedence
+        // QUESTION What is precedence
+        // ANSWER The order of which to parse first
+        // QUESTION But give me a solid reason why this was called
+        // (3 + 4) * 2  // Incorrect! (interpreted as 7 * 2 = 14)
+
+        let left = this.parse_multiplicitive_expr();
+
+        while (this.at().value == '+' || this.at().value == '-') {
+
+            // Simulate how this works
+            const operator = this.eat().value;
+            const right = this.parse_multiplicitive_expr();
+
+            // Left is used so it can be accessed outside the loop
+            left = {
+                kind: "BinaryExpr",
+                left,
+                right,
+                operator,
+            } as BinaryExpr;
+        }
+        return left;
+    }
+
+    private parse_multiplicitive_expr (): Expr {
+        let left = this.parse_primary_expr();
+
+        while (this.at().value == '*' || this.at().value == '/' || this.at().value == '%') {
+
+            const operator = this.eat().value;
+            const right = this.parse_primary_expr();
+
+            // Left is used so it can be accessed outside the loop
+            left = {
+                kind: "BinaryExpr",
+                left,
+                right,
+                operator,
+            } as BinaryExpr;
+        }
+        return left;
     }
 
     // Why are we parsing primary expressions in here?
@@ -97,16 +152,24 @@ export default class Parser {
         switch (tk) {
             case TokenType.Identifier:
                 return { kind: "Identifier", symbol: this.eat().value } as Identifier;
-                // However there is an issue here
-                // this doesnt advance
             case TokenType.Number:
                 return { kind: "NumericLiteral", value: parseFloat(this.eat().value) } as NumericLiteral;
                 // However there is an issue here
                 // this doesnt advance
+            case TokenType.OpenParen: {
+                this.eat(); // eat the opening paren
+                const value = this.parse_expr();
+                // QUESTION Why is it not called from the parse_stmt
+                this.expect(
+                    TokenType.CloseParen, 
+                    "Unexpected token found inside parenthesised expression. Expected closing parenthesis.",
+                );
+
+                return value;
+            }
             default:
                 console.error("Unexpected token found during parsing!", this.at());
                 Deno.exit(1);
-            // Trick the compiler for TS
         }
     }
 }
