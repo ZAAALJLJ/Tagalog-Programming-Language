@@ -5,6 +5,7 @@
 // QUESTION Why do I need to have a Token type? Is this the Data Type already?
 export enum TokenType {
     // Literal Types
+    Null,
     Number,
     Identifier,
 
@@ -23,6 +24,7 @@ export enum TokenType {
 // ANSWER it's basically a dictionary
 const KEYWORDS: Record<string, TokenType> = {
     "let": TokenType.Let,
+    null: TokenType.Null,
 }
 
 // 'export' makes the interface Token available for use in other files of modules.
@@ -116,10 +118,11 @@ export function tokenize(sourceCode: string): Token[] {
                 // check for reserved keywords
                 // NOTE let is mutable while const is immutable
                 const reserved = KEYWORDS[ident];
-                if (reserved == undefined) {
-                    tokens.push(token(ident, TokenType.Identifier));
-                } else {
+                // QUESTION I dont get why is it number?
+                if (typeof reserved == "number") {
                     tokens.push(token(ident, reserved));
+                } else {
+                    tokens.push(token(ident, TokenType.Identifier));
                 }
             } else if (isskippable(src[0])) {
                 // QUESTION what will happen to the skipped character? Will they still be included in the next steps or what?
