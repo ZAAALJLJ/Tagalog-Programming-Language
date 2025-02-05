@@ -7,7 +7,7 @@
 // NOTE Though it knows, you can't use it for type checking because it is not imported and program doesn't know what it is
 // It only inherits its definitions but can't use the base interface if not imported
 // NOTE it’s a best practice to explicitly import base types (or base classes) in any file where they are relevant
-import { Stmt, Program, Expr, BinaryExpr, NumericLiteral, Identifier } from "./ast.ts";
+import { Stmt, Program, Expr, BinaryExpr, NumericLiteral, Identifier, NullLiteral } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 // Why are the ones from lexer imported?
@@ -152,6 +152,9 @@ export default class Parser {
         switch (tk) {
             case TokenType.Identifier:
                 return { kind: "Identifier", symbol: this.eat().value } as Identifier;
+            case TokenType.Null:
+                this.eat();
+                return { kind: "NullLiteral", value: null } as NullLiteral;
             case TokenType.Number:
                 return { kind: "NumericLiteral", value: parseFloat(this.eat().value) } as NumericLiteral;
                 // However there is an issue here
