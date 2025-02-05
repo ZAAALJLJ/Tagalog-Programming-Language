@@ -1,10 +1,10 @@
 import Parser from "./frontend/parser.ts";
-
+import { evaluate } from "./runtime/interpreter.ts";
 repl(); // QUESTION why was repl called here
 
 
 // QUESTION what is asyc
-async function repl () {
+function repl () {
     const parser = new Parser();
     console.log("\nRepl v0.1");
     while (true) {
@@ -18,6 +18,7 @@ async function repl () {
         const program = parser.produceAST(input);
         console.log(program);
 
+        const result = evaluate(program)
     }
 
 
