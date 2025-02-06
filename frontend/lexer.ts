@@ -143,10 +143,10 @@ export function tokenize(sourceCode: string): Token[] {
 
 // NEW WORD await -
 // NEW WORD Deno.readTextFile - just reads or accesses the file
-const source = await Deno.readTextFile("./test.txt");
+// const source = await Deno.readTextFile("./test.txt");
 
 // What this does is get the token from the source file that had been tokenized
 // 'tokenn' is just a variable name
-for (const tokenn of tokenize(source)) {
-    console.log(tokenn);
-}
+// for (const tokenn of tokenize(source)) {
+//    console.log(tokenn);
+// }
